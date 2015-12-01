@@ -42,6 +42,13 @@ router.get('/chatcenter/:name', function(req, res) {
   })
 });
 
+router.get('/chatcenter', function(req, res) {
+  Message.find({}, function(err, data) {
+    res.send(data);
+  })
+});
+
+
 module.exports = router;
 
 

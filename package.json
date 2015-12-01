@@ -7,6 +7,9 @@
     "setup": "rm -rf public/vendor node_modules && npm i && bower i",
     "start": "node app.js"
   },
+  "engine": {
+    "node": "5.1.0"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/CodingHouseFI/social-login.git"
