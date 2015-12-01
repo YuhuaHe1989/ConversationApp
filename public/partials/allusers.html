@@ -1,0 +1,11 @@
+<div class="row">
+  <div class="col-md-6">
+    <ul ng-repeat="user in users">
+      <li>
+        {{user.displayName}} 
+        <button ng-click="gotoChatCenter(user)">Chat</button>
+      </li>
+      <img class='avatar' ng-src="{{user.picture}}" alt="">
+    </ul>
+  </div>
+</div>

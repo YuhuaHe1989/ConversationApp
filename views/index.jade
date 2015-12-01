@@ -1,0 +1,34 @@
+doctype html(lang='en')
+html
+  head
+    meta(charset='UTF-8')
+    title Social Login
+    link(href='vendor/bootstrap/dist/css/bootstrap.css', rel='stylesheet')
+    link(href='vendor/bootstrap-social/bootstrap-social.css', rel='stylesheet')
+    link(href='vendor/font-awesome/css/font-awesome.css', rel='stylesheet')
+    link(href='css/style.css', rel='stylesheet')
+  body(ng-app='socialLogin')
+    div(ng-controller='navCtrl')
+      button(ui-sref='home' class="btn btn-primary navbar-btn") home
+
+      span(ng-if='!isAuthenticated()')
+        button(ui-sref='login' class="btn btn-default navbar-btn") login
+      span(ng-if='isAuthenticated()')
+        button(ui-sref='profile' class="btn btn-default navbar-btn") profile
+        button(ui-sref='allusers' class="btn btn-default navbar-btn") Show Online Users 
+        button(ng-click='logout()' class="btn btn-default navbar-btn") logout
+
+    ui-view
+
+    script(src='vendor/jquery/dist/jquery.min.js')
+    script(src='vendor/bootstrap/dist/js/bootstrap.min.js')
+    script(src='vendor/angular/angular.js')
+    script(src='vendor/angular-ui-router/release/angular-ui-router.min.js')
+    script(src='vendor/satellizer/satellizer.min.js')
+    script(src='js/module.js')
+    script(src='js/controllers/login.js')
+    script(src='js/controllers/home.js')
+    script(src='js/controllers/profile.js')
+    script(src='js/controllers/nav.js')
+    script(src='js/controllers/allusers.js')
+    script(src='js/controllers/chatcenter.js')

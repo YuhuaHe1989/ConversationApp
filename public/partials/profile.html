@@ -1,0 +1,23 @@
+<div class="container">
+  <h1>PROFILE</h1>
+
+  <div>
+    Name: {{user.displayName}}
+  </div>
+  <div>
+    <img class='avatar' ng-src="{{user.picture}}" alt="">
+    <br>
+    <h4>Post a message here</h4>
+    <input type="text" ng-model="message">
+    <button ng-click="postmessage(message)">Post</button>
+
+    <h6 ng-show="showMessage">New Message: {{showMessage}}</h6>
+
+    <ol>
+      <li ng-repeat="talk in talks.data">{{talk.messages[0]}}</li>
+    </ol>
+  </div>
+</div>
+
+
+
