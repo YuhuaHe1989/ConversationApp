@@ -1,6 +1,6 @@
 /**
- * Satellizer 0.13.1
- * (c) 2015 Sahat Yalkabov
+ * Satellizer 0.13.4
+ * (c) 2016 Sahat Yalkabov
  * License: MIT
  */
 
@@ -19,7 +19,7 @@ if (typeof module !== 'undefined' && typeof exports !== 'undefined' && module.ex
   angular.module('satellizer', [])
     .constant('SatellizerConfig', {
       httpInterceptor: function() { return true; },
-      withCredentials: true,
+      withCredentials: false,
       tokenRoot: null,
       cordova: false,
       baseUrl: '/',
@@ -41,7 +41,7 @@ if (typeof module !== 'undefined' && typeof exports !== 'undefined' && module.ex
           scope: ['email'],
           scopeDelimiter: ',',
           display: 'popup',
-          type: '2.0',
+          oauthType: '2.0',
           popupOptions: { width: 580, height: 400 }
         },
         google: {
@@ -55,7 +55,7 @@ if (typeof module !== 'undefined' && typeof exports !== 'undefined' && module.ex
           scopePrefix: 'openid',
           scopeDelimiter: ' ',
           display: 'popup',
-          type: '2.0',
+          oauthType: '2.0',
           popupOptions: { width: 452, height: 633 }
         },
         github: {
@@ -66,7 +66,7 @@ if (typeof module !== 'undefined' && typeof exports !== 'undefined' && module.ex
           optionalUrlParams: ['scope'],
           scope: ['user:email'],
           scopeDelimiter: ' ',
-          type: '2.0',
+          oauthType: '2.0',
           popupOptions: { width: 1020, height: 618 }
         },
         instagram: {
@@ -77,7 +77,7 @@ if (typeof module !== 'undefined' && typeof exports !== 'undefined' && module.ex
           requiredUrlParams: ['scope'],
           scope: ['basic'],
           scopeDelimiter: '+',
-          type: '2.0'
+          oauthType: '2.0'
         },
         linkedin: {
           name: 'linkedin',
@@ -88,7 +88,7 @@ if (typeof module !== 'undefined' && typeof exports !== 'undefined' && module.ex
           scope: ['r_emailaddress'],
           scopeDelimiter: ' ',
           state: 'STATE',
-          type: '2.0',
+          oauthType: '2.0',
           popupOptions: { width: 527, height: 582 }
         },
         twitter: {
@@ -96,7 +96,7 @@ if (typeof module !== 'undefined' && typeof exports !== 'undefined' && module.ex
           url: '/auth/twitter',
           authorizationEndpoint: 'https://api.twitter.com/oauth/authenticate',
           redirectUri: window.location.origin,
-          type: '1.0',
+          oauthType: '1.0',
           popupOptions: { width: 495, height: 645 }
         },
         twitch: {
@@ -108,7 +108,7 @@ if (typeof module !== 'undefined' && typeof exports !== 'undefined' && module.ex
           scope: ['user_read'],
           scopeDelimiter: ' ',
           display: 'popup',
-          type: '2.0',
+          oauthType: '2.0',
           popupOptions: { width: 500, height: 560 }
         },
         live: {
@@ -120,7 +120,7 @@ if (typeof module !== 'undefined' && typeof exports !== 'undefined' && module.ex
           scope: ['wl.emails'],
           scopeDelimiter: ' ',
           display: 'popup',
-          type: '2.0',
+          oauthType: '2.0',
           popupOptions: { width: 500, height: 560 }
         },
         yahoo: {
@@ -130,8 +130,19 @@ if (typeof module !== 'undefined' && typeof exports !== 'undefined' && module.ex
           redirectUri: window.location.origin,
           scope: [],
           scopeDelimiter: ',',
-          type: '2.0',
+          oauthType: '2.0',
           popupOptions: { width: 559, height: 519 }
+        },
+        bitbucket: {
+          name: 'bitbucket',
+          url: '/auth/bitbucket',
+          authorizationEndpoint: 'https://bitbucket.org/site/oauth2/authorize',
+          redirectUri: window.location.origin + '/',
+          requiredUrlParams: ['scope'],
+          scope: ['email'],
+          scopeDelimiter: ' ',
+          oauthType: '2.0',
+          popupOptions: { width: 1028, height: 529 }
         }
       }
     })
@@ -212,12 +223,12 @@ if (typeof module !== 'undefined' && typeof exports !== 'undefined' && module.ex
 
       this.oauth1 = function(params) {
         oauth(params);
-        config.providers[params.name].type = '1.0';
+        config.providers[params.name].oauthType = '1.0';
       };
 
       this.oauth2 = function(params) {
         oauth(params);
-        config.providers[params.name].type = '2.0';
+        config.providers[params.name].oauthType = '2.0';
       };
 
       this.$get = [
@@ -310,7 +321,7 @@ if (typeof module !== 'undefined' && typeof exports !== 'undefined' && module.ex
 
         Shared.setToken = function(response) {
           if (!response) {
-            return $log.warn('Satellizer Warning: Can\'t set token without passing a value');
+            return $log.warn('Can\'t set token without passing a value');
           }
 
           var accessToken = response && response.access_token;
@@ -326,12 +337,12 @@ if (typeof module !== 'undefined' && typeof exports !== 'undefined' && module.ex
 
           if (!token && response) {
             var tokenRootData = config.tokenRoot && config.tokenRoot.split('.').reduce(function(o, x) { return o[x]; }, response.data);
-            token = tokenRootData ? tokenRootData[config.tokenName] : response.data[config.tokenName];
+            token = tokenRootData ? tokenRootData[config.tokenName] : response.data && response.data[config.tokenName];
           }
 
           if (!token) {
             var tokenPath = config.tokenRoot ? config.tokenRoot + '.' + config.tokenName : config.tokenName;
-            return $log.warn('Satellizer Warning: Expecting a token named "' + tokenPath);
+            return $log.warn('Expecting a token named "' + tokenPath);
           }
 
           storage.set(tokenName, token);
@@ -403,7 +414,7 @@ if (typeof module !== 'undefined' && typeof exports !== 'undefined' && module.ex
         var Oauth = {};
 
         Oauth.authenticate = function(name, userData) {
-          var provider = config.providers[name].type === '1.0' ? new Oauth1() : new Oauth2();
+          var provider = config.providers[name].oauthType === '1.0' ? new Oauth1() : new Oauth2();
           var deferred = $q.defer();
 
           provider.open(config.providers[name], userData || {})
@@ -424,12 +435,13 @@ if (typeof module !== 'undefined' && typeof exports !== 'undefined' && module.ex
         };
 
         Oauth.unlink = function(provider, opts) {
-            opts = opts || {};
-            opts.url = opts.url ? opts.url : utils.joinUrl(config.baseUrl, config.unlinkUrl);
-            opts.data = { provider: provider } || opts.data;
-            opts.method = opts.method || 'POST';
+          opts = opts || {};
+          opts.url = opts.url ? opts.url : utils.joinUrl(config.baseUrl, config.unlinkUrl);
+          opts.data = { provider: provider } || opts.data;
+          opts.method = opts.method || 'POST';
+          opts.withCredentials = opts.withCredentials || config.withCredentials;
 
-            return $http(opts);
+          return $http(opts);
         };
 
         return Oauth;
@@ -447,6 +459,7 @@ if (typeof module !== 'undefined' && typeof exports !== 'undefined' && module.ex
           opts.url = opts.url ? opts.url : utils.joinUrl(config.baseUrl, config.loginUrl);
           opts.data = user || opts.data;
           opts.method = opts.method || 'POST';
+          opts.withCredentials = opts.withCredentials || config.withCredentials;
 
           return $http(opts).then(function(response) {
             shared.setToken(response);
@@ -459,6 +472,7 @@ if (typeof module !== 'undefined' && typeof exports !== 'undefined' && module.ex
           opts.url = opts.url ? opts.url : utils.joinUrl(config.baseUrl, config.signupUrl);
           opts.data = user || opts.data;
           opts.method = opts.method || 'POST';
+          opts.withCredentials = opts.withCredentials || config.withCredentials;
 
           return $http(opts);
         };
@@ -556,13 +570,16 @@ if (typeof module !== 'undefined' && typeof exports !== 'undefined' && module.ex
 
           Oauth2.buildQueryString = function() {
             var keyValuePairs = [];
-            var urlParams = ['defaultUrlParams', 'requiredUrlParams', 'optionalUrlParams'];
+            var urlParamsCategories = ['defaultUrlParams', 'requiredUrlParams', 'optionalUrlParams'];
 
-            angular.forEach(urlParams, function(params) {
-
-              angular.forEach(defaults[params], function(paramName) {
+            angular.forEach(urlParamsCategories, function(paramsCategory) {
+              angular.forEach(defaults[paramsCategory], function(paramName) {
                 var camelizedName = utils.camelCase(paramName);
                 var paramValue = angular.isFunction(defaults[paramName]) ? defaults[paramName]() : defaults[camelizedName];
+
+                if (paramName === 'redirect_uri' && !paramValue) {
+                    return;
+                }
 
                 if (paramName === 'state') {
                   var stateName = defaults.name + '_state';
@@ -618,13 +635,21 @@ if (typeof module !== 'undefined' && typeof exports !== 'undefined' && module.ex
 
             return $http.post(serverUrl, defaults)
               .then(function(response) {
+                var url = [defaults.authorizationEndpoint, Oauth1.buildQueryString(response.data)].join('?');
+
                 if (config.cordova) {
-                  popupWindow = popup.open([defaults.authorizationEndpoint, Oauth1.buildQueryString(response.data)].join('?'), defaults.name, defaults.popupOptions, defaults.redirectUri);
+                  popupWindow = popup.open(url, defaults.name, defaults.popupOptions, defaults.redirectUri);
                 } else {
-                  popupWindow.popupWindow.location = [defaults.authorizationEndpoint, Oauth1.buildQueryString(response.data)].join('?');
+                  popupWindow.popupWindow.location = url;
                 }
 
-                var popupListener = config.cordova ? popupWindow.eventListener(defaults.redirectUri) : popupWindow.pollPopup();
+                var popupListener;
+
+                if (config.cordova) {
+                  popupListener = popupWindow.eventListener(defaults.redirectUri);
+                } else {
+                  popupListener = popupWindow.pollPopup();
+                }
 
                 return popupListener
                   .then(function(response) {
@@ -667,13 +692,6 @@ if (typeof module !== 'undefined' && typeof exports !== 'undefined' && module.ex
 
         Popup.open = function(url, name, options) {
           Popup.url = url;
-
-          if (config.cordova) {
-            options.location = options.location || 'no';
-            options.toolbar = options.toolbar || 'yes';
-            options.width = $window.screen.width;
-            options.height = $window.screen.height;
-          }
 
           var stringifiedOptions = Popup.stringifyOptions(Popup.prepareOptions(options));
           var UA = $window.navigator.userAgent;
@@ -757,7 +775,7 @@ if (typeof module !== 'undefined' && typeof exports !== 'undefined' && module.ex
             if (!Popup.popupWindow || Popup.popupWindow.closed || Popup.popupWindow.closed === undefined) {
               $interval.cancel(polling);
             }
-          }, 50);
+          }, 20);
 
           return deferred.promise;
         };
@@ -866,7 +884,7 @@ if (typeof module !== 'undefined' && typeof exports !== 'undefined' && module.ex
       })();
 
       if (!isStorageAvailable) {
-        $log.warn('Satellizer Warning: ' + config.storageType + ' is not available.');
+        $log.warn(config.storageType + ' is not available.');
       }
 
       return {
